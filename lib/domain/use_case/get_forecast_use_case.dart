@@ -7,7 +7,19 @@ class GetForecastUseCase {
 
   GetForecastUseCase({required ForecastRepository forecastRepository}) : _forecastRepository = forecastRepository;
 
-  Future<Result<List<ForecastModel>>> execute(double latitude, double longitude) {
-    return _forecastRepository.getForecasts(latitude, longitude);
+  Future<Result<List<ForecastModel>>> execute(double latitude, double longitude) async {
+    final Result<List<ForecastModel>> result = await _forecastRepository.getForecasts(latitude, longitude);
+
+    return result.when(
+      success: (data) {
+        final DateTime now = DateTime.now();
+        final DateTime tomorrow = now.add(const Duration(days: 1));
+        final dailyForecastList = data.where((model) {
+          return now.isBefore(model.time) && tomorrow.isAfter(model.time);
+        }).toList();
+        return Result.success(dailyForecastList);
+      },
+      error: (e) => Result.error(e),
+    );
   }
 }

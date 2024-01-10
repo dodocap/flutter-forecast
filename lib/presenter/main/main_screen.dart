@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:orm_forecast/domain/model/forecast_model.dart';
+import 'package:orm_forecast/presenter/main/main_state.dart';
+import 'package:orm_forecast/presenter/main/main_view_model.dart';
+import 'package:provider/provider.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -15,9 +19,36 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
   }
 
+  @override
+  Widget build(BuildContext context) {
+    final MainViewModel viewModel = context.watch<MainViewModel>();
+    final MainState state = viewModel.state;
+    return Scaffold(
+      appBar: AppBar(title: const Text('날씨 정보')),
+      body: state.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.builder(
+              itemCount: state.forecastModelList.length,
+              itemBuilder: (context, index) {
+                final ForecastModel model = state.forecastModelList[index];
+                return Text(
+                  model.toString(),
+                );
+              },
+            ),
+    );
+  }
+
   Future<void> _getCurrentPosition() async {
-    final Position position = await _determinePosition();
-    print('${position.latitude} / ${position.longitude}');
+    await _determinePosition().then((position) {
+      print('${position.latitude} / ${position.longitude}');
+      Future.microtask(() {
+        final MainViewModel viewModel = context.read<MainViewModel>();
+        viewModel.getForecastInformation(position.latitude, position.longitude);
+      });
+    }).onError((error, stackTrace) {
+      print('onError $error');
+    });
   }
 
   Future<Position> _determinePosition() async {
@@ -54,12 +85,5 @@ class _MainScreenState extends State<MainScreen> {
     // When we reach here, permissions are granted and we can
     // continue accessing the position of the device.
     return await Geolocator.getCurrentPosition();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-
-    );
   }
 }
