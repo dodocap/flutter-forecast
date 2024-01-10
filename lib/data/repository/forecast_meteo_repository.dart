@@ -26,8 +26,3 @@ class ForecastMeteoRepository implements ForecastRepository {
     );
   }
 }
-
-void main() async {
-  final result = await ForecastMeteoRepository(api: HttpApi()).getForecasts(37, 126);
-  print(result);
-}

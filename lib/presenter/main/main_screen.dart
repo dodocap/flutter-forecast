@@ -11,11 +11,11 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
-    init();
+    _getCurrentPosition();
     super.initState();
   }
 
-  Future<void> init() async {
+  Future<void> _getCurrentPosition() async {
     final Position position = await _determinePosition();
     print('${position.latitude} / ${position.longitude}');
   }

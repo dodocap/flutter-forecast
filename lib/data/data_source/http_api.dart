@@ -7,7 +7,6 @@ class HttpApi implements Api {
   @override
   Future<Result<String>> fetchApi(double latitude, double longitude) async {
     try {
-      print('$_url&latitude=$latitude&longitude=$longitude');
       final http.Response response = await http.get(Uri.parse('$_url&latitude=$latitude&longitude=$longitude'));
       if (response.statusCode == 200) {
         return Result.success(response.body);
