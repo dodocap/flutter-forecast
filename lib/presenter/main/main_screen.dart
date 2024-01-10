@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:lottie/lottie.dart';
 import 'package:orm_forecast/domain/model/forecast_model.dart';
 import 'package:orm_forecast/presenter/main/main_state.dart';
 import 'package:orm_forecast/presenter/main/main_view_model.dart';
@@ -24,30 +25,72 @@ class _MainScreenState extends State<MainScreen> {
     final MainViewModel viewModel = context.watch<MainViewModel>();
     final MainState state = viewModel.state;
     return Scaffold(
-      appBar: AppBar(title: const Text('날씨 정보')),
       body: state.isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: state.forecastModelList.length,
-              itemBuilder: (context, index) {
-                final ForecastModel model = state.forecastModelList[index];
-                return Text(
-                  model.toString(),
-                );
-              },
-            ),
+          : Container(
+            padding: const EdgeInsets.only(top: kToolbarHeight + 8.0, left: 16.0, right: 16.0, bottom: 32.0),
+            color: Colors.white,
+            child: Column(
+                children: [
+                  AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              '${state.forecastModelList.first.temperature}°',
+                              style: const TextStyle(fontSize: 64),
+                            ),
+                            Text(
+                              state.forecastModelList.first.weather,
+                              style: const TextStyle(fontSize: 32),
+                            )
+                          ],
+                        ),
+                        Expanded(child: Lottie.asset('assets/forecast/day_snow.json'))
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: state.forecastModelList.length,
+                      itemBuilder: (context, index) {
+                        final ForecastModel model = state.forecastModelList[index];
+                        return ListTile(
+                          minLeadingWidth: 56,
+                          title: Text('${model.temperature}°', style: const TextStyle(fontSize: 32.0),),
+                          subtitle: Text('💧${model.humidity}%\t\t|\t\t💨️${model.windSpeed}km/h\t\t|\t\t${model.pressure}hPa', style: const TextStyle(fontSize: 14),),
+                          leading: Column(
+                            children: [
+                              Expanded(child: Lottie.asset('assets/forecast/day_snow.json')),
+                              Text(_formatHour(model.time.hour), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),)
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+          ),
     );
   }
 
+  String _formatHour(int hour) => hour > 12 ? '오후 ${hour-12}시' : '오전 $hour시';
+
+
   Future<void> _getCurrentPosition() async {
     await _determinePosition().then((position) {
-      print('${position.latitude} / ${position.longitude}');
       Future.microtask(() {
         final MainViewModel viewModel = context.read<MainViewModel>();
         viewModel.getForecastInformation(position.latitude, position.longitude);
       });
     }).onError((error, stackTrace) {
-      print('onError $error');
+
     });
   }
 
